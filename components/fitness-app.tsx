@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
+import { FitnessProvider } from "../contexts/fitness-context"
 import { ThemeProvider } from "../components/theme-provider"
 import { ThemeToggle } from "./theme-toggle"
+import { PWAInstallPrompt } from "./pwa-install-prompt"
 import Dashboard from "./dashboard"
 import WorkoutTracker from "./workout-tracker"
 import WeightTracker from "./weight-tracker"
@@ -14,25 +16,29 @@ import Goals from "./goals"
 import Routines from "./routines"
 import Nutrition from "./nutrition"
 import Settings from "./settings"
-import {
-  Dumbbell,
-  LineChart,
-  History,
-  LayoutDashboard,
-  Ruler,
-  Target,
-  ListChecks,
-  Apple,
-  Settings2,
-} from "lucide-react"
-import { FitnessProvider } from "../contexts/fitness-context"
+import { Dumbbell, LineChart, History, LayoutDashboard, Ruler, Target, ListChecks, Apple, Settings2 } from 'lucide-react'
 
 export default function FitnessApp() {
   const [mounted, setMounted] = useState(false)
+  const [isOnline, setIsOnline] = useState(true)
 
   // Ensure hydration
   useEffect(() => {
     setMounted(true)
+    
+    // Verificar el estado de la conexión
+    setIsOnline(navigator.onLine)
+    
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
   }, [])
 
   if (!mounted) {
@@ -53,6 +59,11 @@ export default function FitnessApp() {
                 <ThemeToggle />
               </div>
               <p className="text-muted-foreground">Tu entrenador personal digital</p>
+              {!isOnline && (
+                <div className="mt-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-400 p-2 rounded-md">
+                  Estás en modo sin conexión. Algunas funciones pueden estar limitadas.
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -135,8 +146,9 @@ export default function FitnessApp() {
             </TabsContent>
           </Tabs>
         </div>
+        
+        <PWAInstallPrompt />
       </FitnessProvider>
     </ThemeProvider>
   )
 }
-
